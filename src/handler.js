@@ -3,11 +3,20 @@ const books = require('./books')
 
 const addBookHandler = (request, h) => {
   const id = nanoid(16)
-  const { name, year, author, summary, publisher, pageCount, readPage, reading } = request.payload
+  const {
+    name,
+    year,
+    author,
+    summary,
+    publisher,
+    pageCount,
+    readPage,
+    reading
+  } = request.payload
   const insertedAt = new Date().toISOString()
   const updatedAt = insertedAt
 
-  if (name == null) {
+  if (!name) {
     const response = h.response({
       status: 'fail',
       message: 'Gagal menambahkan buku. Mohon isi nama buku'
@@ -42,7 +51,6 @@ const addBookHandler = (request, h) => {
   books.push(newBook)
 
   const isSuccess = books.filter((book) => book.id === id).length > 0
-
   if (!isSuccess) {
     const response = h.response({
       status: 'error',
@@ -64,10 +72,34 @@ const addBookHandler = (request, h) => {
 }
 
 const getAllBooksHandler = (request, h) => {
+  const {
+    name,
+    reading,
+    finished
+  } = request.query
+
+  const dataBooks = books.filter((book) => {
+    let data = books
+
+    if (name) {
+      data = book.name.toLowerCase().includes(name.toLowerCase())
+    }
+
+    if (reading) {
+      data = book.reading === !!Number(reading)
+    }
+
+    if (finished) {
+      data = book.finished === !!Number(finished)
+    }
+
+    return data
+  })
+
   const response = h.response({
     status: 'success',
     data: {
-      books: books.map((book) => ({
+      books: dataBooks.map((book) => ({
         id: book.id,
         name: book.name,
         publisher: book.publisher
@@ -82,8 +114,7 @@ const getBookByIdHandler = (request, h) => {
   const { id } = request.params
 
   const book = books.filter((n) => n.id === id)[0]
-
-  if (book === undefined) {
+  if (!book) {
     const response = h.response({
       status: 'fail',
       message: 'Buku tidak ditemukan'
@@ -104,10 +135,19 @@ const getBookByIdHandler = (request, h) => {
 
 const editBookByIdHandler = (request, h) => {
   const { id } = request.params
-  const { name, year, author, summary, publisher, pageCount, readPage, reading } = request.payload
+  const {
+    name,
+    year,
+    author,
+    summary,
+    publisher,
+    pageCount,
+    readPage,
+    reading
+  } = request.payload
   const updatedAt = new Date().toISOString()
 
-  if (name === undefined) {
+  if (!name) {
     const response = h.response({
       status: 'fail',
       message: 'Gagal memperbarui buku. Mohon isi nama buku'
@@ -126,7 +166,6 @@ const editBookByIdHandler = (request, h) => {
   }
 
   const index = books.findIndex((book) => book.id === id)
-
   if (index === -1) {
     const response = h.response({
       status: 'fail',
@@ -161,7 +200,6 @@ const deleteBookByIdHandler = (request, h) => {
   const { id } = request.params
 
   const index = books.findIndex((book) => book.id === id)
-
   if (index === -1) {
     const response = h.response({
       status: 'fail',
